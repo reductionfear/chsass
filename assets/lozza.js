@@ -2100,8 +2100,36 @@ const WEIGHTS_HEX = `
 
 function getWeightsBuffer() {
 
-  if (NET_LOCAL === 0)
+  if (NET_LOCAL === 0) {
+    // Check if running in browser environment
+    if (!nodeHost) {
+      // Browser environment: use synchronous XMLHttpRequest in Worker
+      // Synchronous XHR is allowed in Workers and necessary here since
+      // netLoad() expects synchronous initialization
+      try {
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', 'quantised.bin', false); // false = synchronous
+        xhr.overrideMimeType('text/plain; charset=x-user-defined');
+        xhr.send(null);
+        if (xhr.status === 200) {
+          const text = xhr.responseText;
+          const bytes = new Uint8Array(text.length);
+          for (let i = 0; i < text.length; i++) {
+            bytes[i] = text.charCodeAt(i) & 0xff;
+          }
+          return bytes;
+        } else {
+          console.error('Failed to load weights file: HTTP ' + xhr.status);
+          return new Uint8Array(0);
+        }
+      } catch (e) {
+        console.error('Error loading weights file:', e);
+        return new Uint8Array(0);
+      }
+    }
+    // Node.js environment: use fs
     return fs.readFileSync(NET_WEIGHTS_FILE);
+  }
 
   const hex = WEIGHTS_HEX.replace(/\s+/g, "");
 

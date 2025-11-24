@@ -40,6 +40,14 @@ lozza.postMessage('position startpos');
 lozza.postMessage('go depth 10');  // Search to depth 10
 ```
 
+#### Neural Network Weights
+
+The Lozza engine uses NNUE (Efficiently Updatable Neural Network) evaluation. The neural network weights are stored in `assets/quantised.bin`. The engine automatically loads this file:
+- In browser/extension environments: Uses XMLHttpRequest to fetch the weights file
+- In Node.js environments: Uses `fs.readFileSync` to load the weights file
+
+If you need to use custom weights, replace `assets/quantised.bin` with your own weights file.
+
 #### UCI Protocol Commands
 
 Lozza implements the Universal Chess Interface (UCI) protocol:
@@ -52,6 +60,7 @@ Lozza implements the Universal Chess Interface (UCI) protocol:
 - `quit` - Quit the engine
 
 For more information about Lozza, visit: https://op12no2.github.io/lozza-ui/play.htm
+
 
 ## License
 
