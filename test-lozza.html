@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lozza Engine Test</title>
+    <style>
+        body {
+            font-family: monospace;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+        }
+        h1 {
+            color: #4ec9b0;
+        }
+        #output {
+            background: #252526;
+            border: 1px solid #3e3e42;
+            padding: 15px;
+            height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            font-size: 12px;
+        }
+        button {
+            background: #0e639c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        button:hover {
+            background: #1177bb;
+        }
+        .info {
+            background: #264f78;
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 3px solid #4ec9b0;
+        }
+    </style>
+</head>
+<body>
+    <h1>Lozza Chess Engine Integration Test</h1>
+    
+    <div class="info">
+        <strong>Note:</strong> This test page demonstrates how the Lozza engine can be used within the Chess Assist extension.
+        The engine communicates using the UCI (Universal Chess Interface) protocol.
+    </div>
+
+    <div>
+        <button onclick="initEngine()">Initialize Engine</button>
+        <button onclick="startPosition()">Set Start Position</button>
+        <button onclick="searchPosition()">Analyze Position (depth 10)</button>
+        <button onclick="clearOutput()">Clear Output</button>
+    </div>
+
+    <h3>Engine Output:</h3>
+    <div id="output"></div>
+
+    <script>
+        let lozza = null;
+        const output = document.getElementById('output');
+
+        function log(message) {
+            output.textContent += message + '\n';
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearOutput() {
+            output.textContent = '';
+        }
+
+        function initEngine() {
+            try {
+                // In the extension context, use: chrome.runtime.getURL('assets/lozza.js')
+                // For standalone testing, use the direct path
+                lozza = new Worker('assets/lozza.js');
+                
+                lozza.onmessage = function(e) {
+                    log('← ' + e.data);
+                };
+
+                lozza.onerror = function(e) {
+                    log('ERROR: ' + e.message);
+                };
+
+                log('=== Initializing Lozza Engine ===');
+                lozza.postMessage('uci');
+                log('→ uci');
+            } catch (error) {
+                log('ERROR: ' + error.message);
+                log('Note: This test requires the page to be served from a web server.');
+            }
+        }
+
+        function startPosition() {
+            if (!lozza) {
+                log('ERROR: Engine not initialized. Click "Initialize Engine" first.');
+                return;
+            }
+            log('\n=== Setting Start Position ===');
+            lozza.postMessage('ucinewgame');
+            log('→ ucinewgame');
+            
+            lozza.postMessage('position startpos');
+            log('→ position startpos');
+        }
+
+        function searchPosition() {
+            if (!lozza) {
+                log('ERROR: Engine not initialized. Click "Initialize Engine" first.');
+                return;
+            }
+            log('\n=== Searching Position (depth 10) ===');
+            lozza.postMessage('go depth 10');
+            log('→ go depth 10');
+        }
+
+        // Auto-initialize on page load
+        window.addEventListener('load', function() {
+            log('Lozza Engine Test Page Loaded\n');
+            log('Click "Initialize Engine" to begin.\n');
+        });
+    </script>
+</body>
+</html>
